@@ -130,15 +130,19 @@ SIMPLE_JWT = {
 
 CORS_ALLOWED_ORIGINS = [
     "https://positive-upliftment-production-ecca.up.railway.app",  # ✅ Your backend URL
-    "https://lostfound-8ala56r24-srees-projects-96decc11.vercel.app/",  # ✅ Your frontend URL (when deployed)
+    "https://lostfound-8ala56r24-srees-projects-96decc11.vercel.app",  # ✅ Your frontend URL (when deployed)
     "http://localhost:5173",
     "http://localhost:4173",
 ]
 CORS_ALLOW_CREDENTIALS = True
-
+# Find or add this section
+CSRF_TRUSTED_ORIGINS = [
+    "https://positive-upliftment-production-ecca.up.railway.app",
+    "https://lostfound-8ala56r24-srees-projects-96decc11.vercel.app",  # ✅ Your frontend URL
+]
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'noreply@vignan.ac.in'
 
-SECURE_SSL_REDIRECT = False
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
