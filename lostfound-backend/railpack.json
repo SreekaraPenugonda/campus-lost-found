@@ -1,0 +1,8 @@
+{
+  "deploy": {
+    "startCommand": "gunicorn lostfound_backend.wsgi"
+  },
+  "packages": {
+    "python": "3.10"
+  }
+}
