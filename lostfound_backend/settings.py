@@ -4,6 +4,10 @@ from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+# Ensure staticfiles directory exists
+STATICFILES_DIR = BASE_DIR / 'staticfiles'
+STATICFILES_DIR.mkdir(parents=True, exist_ok=True)
+
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-this-in-production')
 
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
@@ -88,6 +92,10 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Create staticfiles directory if it doesn't exist
+import os
+os.makedirs(STATIC_ROOT, exist_ok=True)
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
