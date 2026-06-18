@@ -129,9 +129,10 @@ SIMPLE_JWT = {
 }
 
 CORS_ALLOWED_ORIGINS = [
+    "https://positive-upliftment-production-ecca.up.railway.app",  # ✅ Your backend URL
+    "https://lostfound-8ala56r24-srees-projects-96decc11.vercel.app/",  # ✅ Your frontend URL (when deployed)
     "http://localhost:5173",
-    "http://localhost:3000",
-    "http://127.0.0.1:5173",
+    "http://localhost:4173",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
