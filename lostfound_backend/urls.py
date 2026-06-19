@@ -3,6 +3,8 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 from items.views import ItemViewSet, SuccessStoryViewSet, FeedbackViewSet
 from claims.views import ClaimViewSet
 from matching.views import MatchResultViewSet
@@ -15,6 +17,20 @@ from users.views import (
 )
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+@api_view(['GET'])
+def api_root(request):
+    return Response({
+        'message': 'Vignan Lost & Found API',
+        'version': '1.0',
+        'endpoints': {
+            'admin': '/admin/',
+            'api': '/api/',
+            'register': '/api/register/',
+            'login': '/api/token/',
+            'profile': '/api/profile/',
+        }
+    })
+
 router = DefaultRouter()
 router.register(r'items', ItemViewSet, basename='item')
 router.register(r'claims', ClaimViewSet, basename='claim')
@@ -25,6 +41,7 @@ router.register(r'stories', SuccessStoryViewSet, basename='story')
 router.register(r'feedback', FeedbackViewSet, basename='feedback')
 
 urlpatterns = [
+    path('', api_root, name='api-root'),
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
     path('api/register/', RegisterView.as_view(), name='register'),
