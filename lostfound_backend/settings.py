@@ -31,7 +31,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
-    'corsheaders',
+    'corsheaders',  # ✅ Must be here
     'django_filters',
     
     # Local apps
@@ -43,11 +43,12 @@ INSTALLED_APPS = [
     'notifications',
 ]
 
+# ✅ CORRECT MIDDLEWARE ORDER - CORS MUST BE FIRST!
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # ✅ MUST BE FIRST
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -99,7 +100,6 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Create staticfiles directory if it doesn't exist
-import os
 os.makedirs(STATIC_ROOT, exist_ok=True)
 
 MEDIA_URL = 'media/'
@@ -134,13 +134,9 @@ SIMPLE_JWT = {
 }
 
 # ===== CORS SETTINGS =====
-# Allow all origins for testing (change this in production)
-CORS_ALLOW_ALL_ORIGINS = True  # ✅ Temporary fix - allows all origins
-
-# Allow credentials (important for JWT)
+CORS_ALLOW_ALL_ORIGINS = True  # ✅ Allows all origins
 CORS_ALLOW_CREDENTIALS = True
 
-# Allow all methods
 CORS_ALLOW_METHODS = [
     'DELETE',
     'GET',
@@ -150,7 +146,6 @@ CORS_ALLOW_METHODS = [
     'PUT',
 ]
 
-# Allow all headers
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -167,11 +162,13 @@ CORS_ALLOW_HEADERS = [
 CSRF_TRUSTED_ORIGINS = [
     "https://positive-upliftment-production-ecca.up.railway.app",
     "https://lostfound-8ala56r24-srees-projects-96decc11.vercel.app",
+    "https://lostfound-web-two.vercel.app",
     "https://*.vercel.app",
     "https://*.railway.app",
     "http://localhost:*",
     "http://127.0.0.1:*",
 ]
+
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'noreply@vignan.ac.in'
 
