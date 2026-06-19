@@ -109,15 +109,23 @@ SIMPLE_JWT = {
 }
 
 # ===== CORS =====
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
+# Use explicit allowlists; do NOT use "*" with credentials.
+# Your frontend uses JWT in Authorization header, so credentials are not required.
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_CREDENTIALS = False
 
+CORS_ALLOWED_ORIGINS = [
+    "https://positive-upliftment-production-ecca.up.railway.app",
+    "https://lostfound-91o649pb1-srees-projects-96decc11.vercel.app",
+    "https://lostfound-web-two.vercel.app",
+    "https://lostfound-web-two.vercel.app:443",
+]
+
+# CSRF is used only for cookie/session based auth (not JWT).
 CSRF_TRUSTED_ORIGINS = [
     "https://positive-upliftment-production-ecca.up.railway.app",
     "https://lostfound-91o649pb1-srees-projects-96decc11.vercel.app",
     "https://lostfound-web-two.vercel.app",
-    "https://*.vercel.app",
-    "https://*.railway.app",
 ]
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
