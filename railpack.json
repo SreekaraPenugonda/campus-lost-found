@@ -1,6 +1,6 @@
 {
   "deploy": {
-    "startCommand": "gunicorn lostfound_backend.wsgi:application --bind 0.0.0.0:$PORT"
+    "startCommand": "gunicorn lostfound_backend.wsgi:application"
   },
   "packages": {
     "python": "3.10"
