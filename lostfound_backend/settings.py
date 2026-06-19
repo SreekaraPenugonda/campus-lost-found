@@ -24,7 +24,6 @@ INSTALLED_APPS = [
     'users',
     'items',
     'claims',
-    'matching',
     'chat',
     'notifications',
 ]
