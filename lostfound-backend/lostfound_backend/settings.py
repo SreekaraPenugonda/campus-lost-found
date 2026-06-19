@@ -95,7 +95,7 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  # ✅ Allow any for testing
+        'rest_framework.permissions.AllowAny',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
@@ -110,8 +110,7 @@ SIMPLE_JWT = {
 }
 
 # ===== CORS =====
-# Use explicit allowlists; do NOT use "*" with credentials.
-# Your frontend uses JWT in Authorization header, so credentials are not required.
+# Frontend uses JWT via Authorization header (no cookie sessions).
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = False
 
@@ -122,14 +121,6 @@ CORS_ALLOWED_ORIGINS = [
     "https://lostfound-web-two.vercel.app:443",
 ]
 
-<<<<<<< HEAD:lostfound-backend/lostfound_backend/settings.py
-# Make sure app config modules are picked up consistently.
-# (No functional change here—just clarity for maintainers.)
-
-
-=======
->>>>>>> c24b58a022376686b63943a84ea50e8962a27526:lostfound_backend/settings.py
-# CSRF is used only for cookie/session based auth (not JWT).
 CSRF_TRUSTED_ORIGINS = [
     "https://positive-upliftment-production-ecca.up.railway.app",
     "https://lostfound-91o649pb1-srees-projects-96decc11.vercel.app",
@@ -137,3 +128,4 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
