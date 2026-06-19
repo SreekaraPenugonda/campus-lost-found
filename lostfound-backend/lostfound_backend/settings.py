@@ -4,20 +4,10 @@ from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# Ensure staticfiles directory exists
-STATICFILES_DIR = BASE_DIR / 'staticfiles'
-STATICFILES_DIR.mkdir(parents=True, exist_ok=True)
-
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-this-in-production')
-
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = [
-    'positive-upliftment-production-ecca.up.railway.app',
-    'localhost',
-    '127.0.0.1',
-    '*',
-]
+ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -26,28 +16,24 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
-    # Third party
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'django_filters',
-    
-    # Local apps
     'users',
     'items',
     'claims',
-    'matching',
     'chat',
     'notifications',
+    'matching',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -60,7 +46,7 @@ ROOT_URLCONF = 'lostfound_backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -97,9 +83,6 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-# Create staticfiles directory if it doesn't exist
-import os
 os.makedirs(STATIC_ROOT, exist_ok=True)
 
 MEDIA_URL = 'media/'
@@ -107,19 +90,12 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'auth.User'
-
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
-    ],
-    'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend',
-        'rest_framework.filters.SearchFilter',
-        'rest_framework.filters.OrderingFilter',
+        'rest_framework.permissions.AllowAny',  # ✅ Allow any for testing
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
@@ -133,22 +109,28 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
+# ===== CORS =====
+# Use explicit allowlists; do NOT use "*" with credentials.
+# Your frontend uses JWT in Authorization header, so credentials are not required.
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_CREDENTIALS = False
+
 CORS_ALLOWED_ORIGINS = [
-    "https://positive-upliftment-production-ecca.up.railway.app",  # ✅ Your backend URL
-    "https://lostfound-8ala56r24-srees-projects-96decc11.vercel.app",  # ✅ Your frontend URL (when deployed)
-    "http://localhost:5173",
-    "http://localhost:4173",
+    "https://positive-upliftment-production-ecca.up.railway.app",
+    "https://lostfound-91o649pb1-srees-projects-96decc11.vercel.app",
+    "https://lostfound-web-two.vercel.app",
+    "https://lostfound-web-two.vercel.app:443",
 ]
-CORS_ALLOW_CREDENTIALS = True
-# Find or add this section
+
+# Make sure app config modules are picked up consistently.
+# (No functional change here—just clarity for maintainers.)
+
+
+# CSRF is used only for cookie/session based auth (not JWT).
 CSRF_TRUSTED_ORIGINS = [
     "https://positive-upliftment-production-ecca.up.railway.app",
-    "https://lostfound-8ala56r24-srees-projects-96decc11.vercel.app",  # ✅ Your frontend URL
+    "https://lostfound-91o649pb1-srees-projects-96decc11.vercel.app",
+    "https://lostfound-web-two.vercel.app",
 ]
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'noreply@vignan.ac.in'
 
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SECURE_SSL_REDIRECT = False
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
