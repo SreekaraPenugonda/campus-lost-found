@@ -133,17 +133,44 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-CORS_ALLOWED_ORIGINS = [
-    "https://positive-upliftment-production-ecca.up.railway.app",  # ✅ Your backend URL
-    "https://lostfound-8ala56r24-srees-projects-96decc11.vercel.app",  # ✅ Your frontend URL (when deployed)
-    "http://localhost:5173",
-    "http://localhost:4173",
-]
+# ===== CORS SETTINGS =====
+# Allow all origins for testing (change this in production)
+CORS_ALLOW_ALL_ORIGINS = True  # ✅ Temporary fix - allows all origins
+
+# Allow credentials (important for JWT)
 CORS_ALLOW_CREDENTIALS = True
-# Find or add this section
+
+# Allow all methods
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+# Allow all headers
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# ===== CSRF SETTINGS =====
 CSRF_TRUSTED_ORIGINS = [
     "https://positive-upliftment-production-ecca.up.railway.app",
-    "https://lostfound-8ala56r24-srees-projects-96decc11.vercel.app",  # ✅ Your frontend URL
+    "https://lostfound-8ala56r24-srees-projects-96decc11.vercel.app",
+    "https://*.vercel.app",
+    "https://*.railway.app",
+    "http://localhost:*",
+    "http://127.0.0.1:*",
 ]
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'noreply@vignan.ac.in'
