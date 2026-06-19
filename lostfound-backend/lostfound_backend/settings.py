@@ -122,10 +122,13 @@ CORS_ALLOWED_ORIGINS = [
     "https://lostfound-web-two.vercel.app:443",
 ]
 
+<<<<<<< HEAD:lostfound-backend/lostfound_backend/settings.py
 # Make sure app config modules are picked up consistently.
 # (No functional change here—just clarity for maintainers.)
 
 
+=======
+>>>>>>> c24b58a022376686b63943a84ea50e8962a27526:lostfound_backend/settings.py
 # CSRF is used only for cookie/session based auth (not JWT).
 CSRF_TRUSTED_ORIGINS = [
     "https://positive-upliftment-production-ecca.up.railway.app",
