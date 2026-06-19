@@ -34,7 +34,6 @@ def api_root(request):
 router = DefaultRouter()
 router.register(r'items', ItemViewSet, basename='item')
 router.register(r'claims', ClaimViewSet, basename='claim')
-router.register(r'matches', MatchResultViewSet, basename='match')
 router.register(r'chat', ChatMessageViewSet, basename='chat')
 router.register(r'notifications', NotificationViewSet, basename='notification')
 router.register(r'stories', SuccessStoryViewSet, basename='story')
