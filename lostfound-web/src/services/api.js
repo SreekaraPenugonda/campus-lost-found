@@ -1,14 +1,16 @@
 import axios from 'axios';
 
-// Create axios instance with base URL
+// ✅ CORRECT URL - no trailing slash!
+const API_URL = 'https://campus-lost-found-production-307b.up.railway.app';
+
 const api = axios.create({
-  baseURL: '6f07ef9b-bc81-44f4-b8dd-a9cec33e382b    ',
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Add token to every request if it exists
+// Add token to every request
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');
@@ -17,28 +19,25 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Handle token refresh on 401 errors
+// Handle token refresh
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
+  async (error) {
     const originalRequest = error.config;
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
         const refreshToken = localStorage.getItem('refresh_token');
-        const response = await axios.post('http://127.0.0.1:8000/api/token/refresh/', {
+        const response = await axios.post(`${API_URL}/api/token/refresh/`, {
           refresh: refreshToken,
         });
         localStorage.setItem('access_token', response.data.access);
         originalRequest.headers.Authorization = `Bearer ${response.data.access}`;
         return api(originalRequest);
       } catch (refreshError) {
-        // Redirect to login if refresh fails
         localStorage.clear();
         window.location.href = '/login';
         return Promise.reject(refreshError);
@@ -48,4 +47,4 @@ api.interceptors.response.use(
   }
 );
 
-export default api; 
+export default api;
