@@ -1,30 +1,21 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import api from '../services/api';
 
-export default function Login({ setIsAuthenticated, setUser }) {
-  const navigate = useNavigate();
+export default function Login({ onLogin }) {
   const [form, setForm] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showForgot, setShowForgot] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState('');
-  const [forgotStatus, setForgotStatus] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     try {
-      const res = await api.post('/token/', { username: form.username, password: form.password });
+      const res = await api.post('/token/', form);
       localStorage.setItem('access_token', res.data.access);
       localStorage.setItem('refresh_token', res.data.refresh);
-      const userRes = await api.get('/profile/');
-      const userData = userRes.data;
-      localStorage.setItem('user', JSON.stringify(userData));
-      setIsAuthenticated(true);
-      setUser(userData);
-      navigate('/dashboard');
+      if (onLogin) onLogin();
     } catch (err) {
       setError('Invalid username or password');
     } finally {
@@ -32,91 +23,136 @@ export default function Login({ setIsAuthenticated, setUser }) {
     }
   };
 
-  const handleForgotPassword = async (e) => {
-    e.preventDefault();
-    setForgotStatus('sending');
-    try {
-      await api.post('/request-password-reset/', { email: forgotEmail });
-      setForgotStatus('sent');
-    } catch (err) {
-      setForgotStatus('error');
-    }
-  };
-
   return (
     <div className="login-page">
-      <div className="login-card">
+      <div className="login-container">
         <div className="login-header">
-          <h1>🏫 Vignan Lost & Found</h1>
-          <p>Sign in to your account</p>
+          <h1>Welcome Back</h1>
+          <p>Login to track your items</p>
         </div>
 
-        {error && <div className="alert error">{error}</div>}
+        {error && <div className="error-message">{error}</div>}
 
         <form onSubmit={handleSubmit} className="login-form">
-          <input
-            type="text"
-            placeholder="Username"
-            value={form.username}
-            onChange={e => setForm({...form, username: e.target.value})}
-            required
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={e => setForm({...form, password: e.target.value})}
-            required
-          />
-          <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
+          <div className="form-group">
+            <label>Username</label>
+            <input
+              type="text"
+              placeholder="Enter username"
+              value={form.username}
+              onChange={e => setForm({ ...form, username: e.target.value })}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Password</label>
+            <input
+              type="password"
+              placeholder="Enter password"
+              value={form.password}
+              onChange={e => setForm({ ...form, password: e.target.value })}
+              required
+            />
+          </div>
+
+          <button type="submit" className="btn-primary btn-full" disabled={loading}>
+            {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
 
-        <div className="login-links">
-          <button onClick={() => setShowForgot(!showForgot)} className="link-btn">
-            Forgot password?
-          </button>
-          <span>Don't have an account? <Link to="/register" className="link">Register</Link></span>
+        <div className="login-footer">
+          <p>Don't have an account? <Link to="/register">Register</Link></p>
+          <Link to="/" className="back-link">← Back to Home</Link>
         </div>
-
-        {showForgot && (
-          <form onSubmit={handleForgotPassword} className="forgot-form">
-            <h3>Reset Password</h3>
-            <input
-              type="email"
-              placeholder="Enter your email"
-              value={forgotEmail}
-              onChange={e => setForgotEmail(e.target.value)}
-              required
-            />
-            <button type="submit" className="btn-secondary" disabled={forgotStatus === 'sending'}>
-              {forgotStatus === 'sending' ? 'Sending...' : 'Send OTP'}
-            </button>
-            {forgotStatus === 'sent' && <p className="success">OTP sent to your email!</p>}
-            {forgotStatus === 'error' && <p className="error">Failed to send OTP</p>}
-          </form>
-        )}
       </div>
 
       <style>{`
-        .login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1a365d, #2d5a8e); padding: 20px; }
-        .login-card { background: white; padding: 40px; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
-        .login-header { text-align: center; margin-bottom: 28px; }
-        .login-header h1 { font-size: 24px; color: #1a365d; margin: 0 0 6px; }
-        .login-header p { color: #6b7280; margin: 0; }
-        .alert { padding: 10px; border-radius: 6px; margin-bottom: 16px; font-size: 14px; }
-        .alert.error { background: #fee2e2; color: #991b1b; }
-        .login-form { display: flex; flex-direction: column; gap: 12px; }
-        .login-form input { padding: 12px 14px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; }
-        .login-form input:focus { border-color: #7FFF00; outline: none; }
-        .login-links { display: flex; justify-content: space-between; margin-top: 16px; font-size: 13px; }
-        .link-btn { background: none; border: none; color: #2563eb; cursor: pointer; font-size: 13px; }
-        .link { color: #2563eb; text-decoration: none; font-weight: 500; }
-        .forgot-form { margin-top: 20px; padding-top: 20px; border-top: 1px solid #eaeef2; }
-        .forgot-form h3 { font-size: 16px; color: #1a365d; margin: 0 0 12px; }
-        .forgot-form input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; margin-bottom: 8px; }
-        .success { color: #16a34a; font-size: 13px; }
+        .login-page {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #1a365d 0%, #2d5a8e 100%);
+          padding: 20px;
+        }
+        .login-container {
+          background: white;
+          padding: 40px;
+          border-radius: 12px;
+          width: 100%;
+          max-width: 400px;
+        }
+        .login-header {
+          text-align: center;
+          margin-bottom: 32px;
+        }
+        .login-header h1 {
+          font-size: 28px;
+          color: #1a365d;
+          margin: 0 0 8px;
+        }
+        .login-header p {
+          color: #6b7280;
+          margin: 0;
+        }
+        .error-message {
+          padding: 12px;
+          background: #fee2e2;
+          color: #991b1b;
+          border-radius: 6px;
+          margin-bottom: 16px;
+          font-size: 14px;
+        }
+        .login-form {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          margin-bottom: 24px;
+        }
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        .form-group label {
+          font-size: 14px;
+          font-weight: 500;
+          color: #374151;
+        }
+        .form-group input {
+          padding: 12px;
+          border: 1px solid #d1d5db;
+          border-radius: 6px;
+          font-size: 14px;
+        }
+        .form-group input:focus {
+          outline: none;
+          border-color: #7FFF00;
+        }
+        .btn-full {
+          width: 100%;
+          padding: 14px;
+          font-size: 15px;
+        }
+        .login-footer {
+          text-align: center;
+        }
+        .login-footer p {
+          margin: 0 0 12px;
+          color: #6b7280;
+          font-size: 14px;
+        }
+        .login-footer a {
+          color: #7FFF00;
+          font-weight: 600;
+        }
+        .back-link {
+          display: inline-block;
+          margin-top: 12px;
+          color: #6b7280;
+          font-size: 13px;
+        }
       `}</style>
     </div>
   );

@@ -1,7 +1,6 @@
 import axios from 'axios';
 
-// ✅ CORRECT URL - no trailing slash!
-const API_URL = 'https://campus-lost-found-production-307b.up.railway.app';
+const API_URL = import.meta.env.VITE_API_URL || 'https://positive-upliftment-production-ecca.up.railway.app';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -10,7 +9,7 @@ const api = axios.create({
   },
 });
 
-// Add token to every request
+// Add token to requests
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');
@@ -22,27 +21,31 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Handle token refresh
+// Refresh token on 401
 api.interceptors.response.use(
   (response) => response,
-  async (error) {
+  async (error) => {
     const originalRequest = error.config;
+    
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      try {
-        const refreshToken = localStorage.getItem('refresh_token');
-        const response = await axios.post(`${API_URL}/api/token/refresh/`, {
-          refresh: refreshToken,
-        });
-        localStorage.setItem('access_token', response.data.access);
-        originalRequest.headers.Authorization = `Bearer ${response.data.access}`;
-        return api(originalRequest);
-      } catch (refreshError) {
-        localStorage.clear();
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
+      
+      const refresh = localStorage.getItem('refresh_token');
+      if (refresh) {
+        try {
+          const res = await api.post('/api/token/refresh/', { refresh });
+          const newToken = res.data.access;
+          localStorage.setItem('access_token', newToken);
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          return api(originalRequest);
+        } catch (err) {
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          window.location.href = '/login';
+        }
       }
     }
+    
     return Promise.reject(error);
   }
 );

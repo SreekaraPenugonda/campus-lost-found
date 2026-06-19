@@ -1,166 +1,285 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import MatchCard from '../components/MatchCard';
 
-export default function Dashboard({ user }) {
+export default function Dashboard() {
   const [myItems, setMyItems] = useState([]);
+  const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [stats, setStats] = useState({ total: 0, lost: 0, found: 0 });
 
   useEffect(() => {
-    if (user) {
-      fetchMyItems();
-    } else {
-      setLoading(false);
-    }
-  }, [user]);
+    loadData();
+  }, []);
 
-  const fetchMyItems = async () => {
-    setLoading(true);
-    setError('');
-    
+  const loadData = async () => {
     try {
-      // Use backend filtering with ?user=me parameter
-      const response = await api.get('/items/?user=me');
-      const data = response.data;
-      
-      let itemsArray = [];
-      if (data === null || data === undefined) {
-        itemsArray = [];
-      } else if (Array.isArray(data)) {
-        itemsArray = data;
-      } else if (typeof data === 'object' && data.results !== undefined) {
-        itemsArray = Array.isArray(data.results) ? data.results : [];
-      } else {
-        itemsArray = [];
-      }
-      
-      setMyItems(itemsArray);
-      
-      const total = itemsArray.length;
-      const lost = itemsArray.filter(i => i && i.status === 'LOST').length;
-      const found = itemsArray.filter(i => i && i.status === 'FOUND').length;
-      setStats({ total, lost, found });
-      
-    } catch (error) {
-      console.error('Error fetching items:', error);
-      setError('Failed to load your items. Please try again.');
-      setMyItems([]);
-      setStats({ total: 0, lost: 0, found: 0 });
+      const [itemsRes, matchesRes] = await Promise.all([
+        api.get('/items/'),
+        api.get('/matches/my_matches/')
+      ]);
+      setMyItems(itemsRes.data.results || itemsRes.data);
+      setMatches(matchesRes.data || []);
+    } catch (err) {
+      console.error('Failed to load dashboard:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'LOST': return 'bg-yellow-100 text-yellow-800';
-      case 'FOUND': return 'bg-green-100 text-green-800';
-      case 'RESOLVED': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const itemsToRender = Array.isArray(myItems) ? myItems : [];
-
-  if (loading) {
-    return (
-      <div className="text-center py-12">
-        <div className="text-3xl mb-2">⏳</div>
-        <div className="text-gray-600">Loading your items...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-12 bg-white rounded-xl shadow p-8">
-        <div className="text-4xl mb-2">⚠️</div>
-        <p className="text-red-600 mb-4">{error}</p>
-        <button onClick={fetchMyItems} className="btn-primary">
-          🔄 Retry
-        </button>
-      </div>
-    );
-  }
+  const lostItems = myItems.filter(item => item.status === 'LOST');
+  const foundItems = myItems.filter(item => item.status === 'FOUND');
 
   return (
-    <div>
-      {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-green-600 to-green-700 text-white rounded-2xl p-6 md:p-8 mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold">
-          👋 Welcome back, {user?.first_name || user?.username || 'User'}!
-        </h1>
-        <p className="text-green-100 mt-2">
-          Here's an overview of your lost and found activity
-        </p>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 md:gap-6 mb-8">
-        <div className="bg-white rounded-xl p-4 md:p-6 shadow-md text-center">
-          <div className="text-2xl font-bold text-gray-900">{stats.total || 0}</div>
-          <div className="text-gray-600 text-sm">Total Items</div>
-        </div>
-        <div className="bg-white rounded-xl p-4 md:p-6 shadow-md text-center">
-          <div className="text-2xl font-bold text-yellow-600">{stats.lost || 0}</div>
-          <div className="text-gray-600 text-sm">Lost</div>
-        </div>
-        <div className="bg-white rounded-xl p-4 md:p-6 shadow-md text-center">
-          <div className="text-2xl font-bold text-green-600">{stats.found || 0}</div>
-          <div className="text-gray-600 text-sm">Found</div>
-        </div>
+    <div className="dashboard-page">
+      <div className="dashboard-header">
+        <h1>📊 Dashboard</h1>
+        <p>Track your reports and matches</p>
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-        <Link to="/report-lost" className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-6 text-center hover:bg-yellow-100 transition">
-          <div className="text-3xl mb-2">❌</div>
-          <h3 className="font-semibold text-gray-900">Report Lost</h3>
-          <p className="text-sm text-gray-600">I lost something</p>
+      <div className="quick-actions">
+        <Link to="/report-lost" className="action-card lost">
+          <span className="action-icon">❌</span>
+          <div>
+            <h3>Report Lost</h3>
+            <p>Post in 30 seconds</p>
+          </div>
         </Link>
-        <Link to="/report-found" className="bg-green-50 border-2 border-green-200 rounded-xl p-6 text-center hover:bg-green-100 transition">
-          <div className="text-3xl mb-2">✅</div>
-          <h3 className="font-semibold text-gray-900">Report Found</h3>
-          <p className="text-sm text-gray-600">I found something</p>
+        <Link to="/report-found" className="action-card found">
+          <span className="action-icon">✅</span>
+          <div>
+            <h3>Report Found</h3>
+            <p>Help someone</p>
+          </div>
+        </Link>
+        <Link to="/recovery" className="action-card stats">
+          <span className="action-icon">📊</span>
+          <div>
+            <h3>Recovery Stats</h3>
+            <p>View analytics</p>
+          </div>
         </Link>
       </div>
 
-      {/* My Items */}
-      <h2 className="text-xl font-bold mb-4">📦 My Items</h2>
-      {itemsToRender.length === 0 ? (
-        <div className="bg-white rounded-xl shadow p-8 text-center">
-          <div className="text-4xl mb-2">📭</div>
-          <p className="text-gray-600">You haven't reported any items yet</p>
-          <Link to="/report-lost" className="inline-block mt-4 btn-primary">
-            Report Your First Item
-          </Link>
+      {/* Stats */}
+      <div className="stats-section">
+        <div className="stat-box">
+          <span className="stat-value">{lostItems.length}</span>
+          <span className="stat-label">Lost Items</span>
         </div>
-      ) : (
-        <div className="space-y-4">
-          {itemsToRender.map(item => (
-            <Link to={`/item/${item.id}`} key={item.id} className="block bg-white rounded-xl shadow p-4 hover:shadow-lg transition">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900">{item.title || 'Untitled'}</h3>
-                  <p className="text-sm text-gray-600 line-clamp-2">{item.description || 'No description'}</p>
-                  <div className="flex flex-wrap gap-2 mt-2 text-xs">
-                    <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded">{item.category || 'Other'}</span>
-                    <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded">📍 {item.building || 'Unknown'}</span>
-                    <span className="text-gray-500">
-                      📅 {item.date_reported ? new Date(item.date_reported).toLocaleDateString() : 'N/A'}
-                    </span>
-                  </div>
-                </div>
-                <span className={`px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap ${getStatusColor(item.status)}`}>
-                  {item.status || 'Unknown'}
-                </span>
-              </div>
-            </Link>
-          ))}
+        <div className="stat-box">
+          <span className="stat-value">{foundItems.length}</span>
+          <span className="stat-label">Found Items</span>
+        </div>
+        <div className="stat-box">
+          <span className="stat-value">{matches.length}</span>
+          <span className="stat-label">Matches</span>
+        </div>
+      </div>
+
+      {/* Recent Matches */}
+      {matches.length > 0 && (
+        <div className="matches-section">
+          <h2>🎯 Your Matches</h2>
+          <div className="matches-list">
+            {matches.slice(0, 5).map(match => (
+              <MatchCard key={match.id} match={match} />
+            ))}
+          </div>
         </div>
       )}
+
+      {/* Recent Items */}
+      <div className="items-section">
+        <h2>📋 Your Recent Reports</h2>
+        {loading ? (
+          <div className="loading">Loading...</div>
+        ) : myItems.length === 0 ? (
+          <div className="empty">
+            <p>No reports yet</p>
+            <Link to="/report-lost" className="btn-primary">Report Your First Item</Link>
+          </div>
+        ) : (
+          <div className="items-list">
+            {myItems.slice(0, 5).map(item => (
+              <Link key={item.id} to={`/items/${item.id}`} className="item-row">
+                <span className="item-icon">
+                  {item.status === 'LOST' ? '❌' : '✅'}
+                </span>
+                <div className="item-info">
+                  <h4>{item.title}</h4>
+                  <p>📍 {item.building} • {new Date(item.date_reported).toLocaleDateString()}</p>
+                </div>
+                <span className="item-status" style={{
+                  background: item.status === 'LOST' ? '#fef3c7' : '#dcfce7',
+                  color: item.status === 'LOST' ? '#92400e' : '#166534'
+              }}>
+                  {item.status}
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <style>{`
+        .dashboard-page {
+          max-width: 1000px;
+          margin: 0 auto;
+          padding: 0 16px 40px;
+        }
+        .dashboard-header {
+          text-align: center;
+          margin-bottom: 32px;
+        }
+        .dashboard-header h1 {
+          font-size: 32px;
+          color: #1a365d;
+          margin: 0 0 6px;
+        }
+        .dashboard-header p {
+          color: #6b7280;
+          margin: 0;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 16px;
+          margin-bottom: 32px;
+        }
+        .action-card {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          padding: 20px;
+          background: white;
+          border: 1px solid #eaeef2;
+          border-radius: 12px;
+          text-decoration: none;
+          transition: all 0.2s ease;
+        }
+        .action-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        .action-card.lost { border-left: 4px solid #f59e0b; }
+        .action-card.found { border-left: 4px solid #16a34a; }
+        .action-card.stats { border-left: 4px solid #7FFF00; }
+        .action-icon {
+          font-size: 32px;
+        }
+        .action-card h3 {
+          margin: 0 0 4px;
+          color: #1a365d;
+          font-size: 16px;
+        }
+        .action-card p {
+          margin: 0;
+          font-size: 13px;
+          color: #6b7280;
+        }
+
+        /* Stats */
+        .stats-section {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 16px;
+          margin-bottom: 32px;
+        }
+        .stat-box {
+          background: white;
+          padding: 24px;
+          border-radius: 12px;
+          border: 1px solid #eaeef2;
+          text-align: center;
+        }
+        .stat-value {
+          display: block;
+          font-size: 36px;
+          font-weight: 700;
+          color: #1a365d;
+          margin-bottom: 4px;
+        }
+        .stat-label {
+          font-size: 13px;
+          color: #6b7280;
+        }
+
+        /* Sections */
+        .matches-section, .items-section {
+          background: white;
+          padding: 24px;
+          border-radius: 12px;
+          border: 1px solid #eaeef2;
+          margin-bottom: 24px;
+        }
+        .matches-section h2, .items-section h2 {
+          font-size: 20px;
+          color: #1a365d;
+          margin: 0 0 16px;
+        }
+        .loading, .empty {
+          text-align: center;
+          padding: 40px;
+          color: #6b7280;
+        }
+        .empty .btn-primary {
+          margin-top: 16px;
+        }
+        .items-list {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .item-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px;
+          background: #f8f9fa;
+          border-radius: 8px;
+          text-decoration: none;
+          transition: all 0.2s ease;
+        }
+        .item-row:hover {
+          background: white;
+          border: 1px solid #7FFF00;
+        }
+        .item-row .item-icon {
+          font-size: 24px;
+        }
+        .item-info {
+          flex: 1;
+        }
+        .item-info h4 {
+          margin: 0 0 4px;
+          color: #1a365d;
+          font-size: 14px;
+        }
+        .item-info p {
+          margin: 0;
+          font-size: 12px;
+          color: #6b7280;
+        }
+        .item-status {
+          padding: 6px 12px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+          .quick-actions {
+            grid-template-columns: 1fr;
+          }
+          .stats-section {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
     </div>
   );
 }

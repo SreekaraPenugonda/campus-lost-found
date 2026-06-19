@@ -1,202 +1,357 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
+import MatchCard from '../components/MatchCard';
+import AnonymousChat from '../components/AnonymousChat';
+import OwnershipVerification from '../components/OwnershipVerification';
+import QRGenerator from '../components/QRGenerator';
 
 export default function ItemDetail() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [item, setItem] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [claiming, setClaiming] = useState(false);
-  const [claimDesc, setClaimDesc] = useState('');
-  const [claimMsg, setClaimMsg] = useState('');
   const [matches, setMatches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('details');
 
   useEffect(() => {
-    fetchItem();
-    fetchMatches();
-    // Increment view count
-    api.post(`/items/${id}/increment_views/`).catch(() => {});
+    loadItem();
+    loadMatches();
   }, [id]);
 
-  const fetchItem = async () => {
+  const loadItem = async () => {
     try {
-      const response = await api.get(`/items/${id}/`);
-      setItem(response.data);
+      const res = await api.get(`/items/${id}/`);
+      setItem(res.data);
     } catch (err) {
-      setError('Item not found');
+      console.error('Failed to load item:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchMatches = async () => {
+  const loadMatches = async () => {
     try {
-      const response = await api.get(`/items/matches/`);
-      if (Array.isArray(response.data)) {
-        setMatches(response.data.filter(m => m.lost_item === parseInt(id) || m.found_item === parseInt(id)));
-      }
-    } catch (e) { /* silent */ }
-  };
-
-  const submitClaim = async () => {
-    if (!claimDesc.trim()) return;
-    setClaiming(true);
-    try {
-      await api.post('/claims/', { item: parseInt(id), description: claimDesc });
-      setClaimMsg('✅ Claim submitted successfully!');
-      setClaimDesc('');
+      const res = await api.post('/matches/find_matches/', { item_id: id });
+      setMatches(res.data.matches || []);
     } catch (err) {
-      setClaimMsg('Failed to submit claim. Please try again.');
-    } finally {
-      setClaiming(false);
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'LOST': return 'bg-yellow-100 text-yellow-800';
-      case 'FOUND': return 'bg-green-100 text-green-800';
-      case 'RESOLVED': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+      console.error('Failed to load matches:', err);
     }
   };
 
   if (loading) {
     return (
-      <div className="text-center py-12">
-        <div className="text-3xl mb-2">⏳</div>
-        <div className="text-gray-600">Loading item details...</div>
+      <div className="loading-container">
+        <div className="loading-spinner" />
+        <p>Loading item details...</p>
       </div>
     );
   }
 
-  if (error || !item) {
+  if (!item) {
     return (
-      <div className="text-center py-12 bg-white rounded-xl shadow">
-        <div className="text-4xl mb-2">🔍</div>
-        <p className="text-gray-600">Item not found</p>
-        <Link to="/items" className="inline-block mt-4 btn-primary">Browse All Items</Link>
+      <div className="error-container">
+        <h2>Item not found</h2>
+        <Link to="/items" className="btn-primary">Back to Items</Link>
       </div>
     );
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-2xl font-bold">{item.title}</h1>
-              <div className="flex gap-2 mt-2">
-                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(item.status)}`}>
-                  {item.status}
-                </span>
-                <span className="bg-white/20 px-3 py-1 rounded-full text-sm">{item.category}</span>
-              </div>
+    <div className="item-detail-page">
+      <div className="item-container">
+        {/* Item Header */}
+        <div className="item-header">
+          <div className="item-icon">
+            {item.status === 'LOST' ? '❌' : item.status === 'FOUND' ? '✅' : '🎉'}
+          </div>
+          <div className="item-title-section">
+            <h1>{item.title}</h1>
+            <div className="item-meta">
+              <span className="status-badge" style={{
+                background: item.status === 'LOST' ? '#fef3c7' : item.status === 'FOUND' ? '#dcfce7' : '#dbeafe',
+                color: item.status === 'LOST' ? '#92400e' : item.status === 'FOUND' ? '#166534' : '#1e40af'
+              }}>
+                {item.status}
+              </span>
+              <span className="urgency-badge" style={{
+                background: item.urgency === 'HIGH' ? '#fee2e2' : item.urgency === 'MEDIUM' ? '#fef3c7' : '#dcfce7',
+                color: item.urgency === 'HIGH' ? '#991b1b' : item.urgency === 'MEDIUM' ? '#92400e' : '#166534'
+              }}>
+                {item.urgency} Priority
+              </span>
             </div>
-            <span className="text-sm bg-white/20 px-3 py-1 rounded-full">👁️ {item.views_count || 0} views</span>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-6">
-          <div className="space-y-6">
-            {/* Description */}
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-1">Description</h3>
-              <p className="text-gray-800">{item.description}</p>
-            </div>
+        {/* Tabs */}
+        <div className="tabs">
+          <button
+            className={`tab ${activeTab === 'details' ? 'active' : ''}`}
+            onClick={() => setActiveTab('details')}
+          >
+            📋 Details
+          </button>
+          {matches.length > 0 && (
+            <button
+              className={`tab ${activeTab === 'matches' ? 'active' : ''}`}
+              onClick={() => setActiveTab('matches')}
+            >
+              🎯 Matches ({matches.length})
+            </button>
+          )}
+          <button
+            className={`tab ${activeTab === 'chat' ? 'active' : ''}`}
+            onClick={() => setActiveTab('chat')}
+          >
+            💬 Chat
+          </button>
+          <button
+            className={`tab ${activeTab === 'verify' ? 'active' : ''}`}
+            onClick={() => setActiveTab('verify')}
+          >
+            🔐 Verify
+          </button>
+        </div>
 
-            {/* Details Grid */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Building</h3>
-                <p className="text-gray-800">{item.building}</p>
+        {/* Tab Content */}
+        <div className="tab-content">
+          {activeTab === 'details' && (
+            <div className="details-tab">
+              <div className="detail-section">
+                <h3>📝 Description</h3>
+                <p>{item.description || 'No description provided'}</p>
               </div>
-              {item.room && <div>
-                <h3 className="text-sm font-medium text-gray-500">Room</h3>
-                <p className="text-gray-800">{item.room}</p>
-              </div>}
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Date Reported</h3>
-                <p className="text-gray-800">{new Date(item.date_reported).toLocaleDateString()}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Date Occurred</h3>
-                <p className="text-gray-800">{new Date(item.date_occurred).toLocaleDateString()}</p>
-              </div>
-            </div>
 
-            {/* Optional Details */}
-            {(item.color || item.brand || item.model) && (
-              <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-2">Item Details</h3>
-                <div className="flex flex-wrap gap-2">
-                  {item.color && <span className="bg-gray-100 px-3 py-1 rounded-full text-sm">🎨 {item.color}</span>}
-                  {item.brand && <span className="bg-gray-100 px-3 py-1 rounded-full text-sm">🏷️ {item.brand}</span>}
-                  {item.model && <span className="bg-gray-100 px-3 py-1 rounded-full text-sm">📱 {item.model}</span>}
-                </div>
+              <div className="detail-section">
+                <h3>📍 Location</h3>
+                <p>{item.building}</p>
+                {item.room && <p>Room: {item.room}</p>}
               </div>
-            )}
 
-            {/* Reported By */}
-            <div className="border-t border-gray-200 pt-4">
-              <p className="text-sm text-gray-500">
-                Reported by: <span className="font-medium text-gray-700">{item.reported_by_username}</span>
-              </p>
-            </div>
+              <div className="detail-section">
+                <h3>📅 Date & Time</h3>
+                <p>{new Date(item.date_occurred).toLocaleString()}</p>
+                <p className="reported-date">
+                  Reported: {new Date(item.date_reported).toLocaleDateString()}
+                </p>
+              </div>
 
-            {/* Claim Section */}
-            <div className="border-t border-gray-200 pt-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">📋 Claim This Item</h3>
-              {claimMsg && (
-                <div className={`p-3 rounded-lg mb-3 text-sm ${claimMsg.includes('✅') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
-                  {claimMsg}
+              {item.color && (
+                <div className="detail-section">
+                  <h3>🎨 Color</h3>
+                  <p>{item.color}</p>
                 </div>
               )}
-              <textarea
-                placeholder="Describe why this item belongs to you (include serial numbers, unique marks, etc.)"
-                className="input-field mb-3"
-                rows="3"
-                value={claimDesc}
-                onChange={(e) => setClaimDesc(e.target.value)}
-              />
-              <button
-                onClick={submitClaim}
-                disabled={claiming || !claimDesc.trim()}
-                className="btn-primary"
-              >
-                {claiming ? 'Submitting...' : 'Submit Claim'}
-              </button>
-            </div>
 
-            {/* Matches Section */}
-            {matches.length > 0 && (
-              <div className="border-t border-gray-200 pt-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">🎯 Potential Matches</h3>
-                {matches.map((m, i) => (
-                  <div key={i} className="bg-green-50 border border-green-200 rounded-lg p-3 mb-2">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium text-green-800">{m.score}% Match</span>
-                      <Link to={`/item/${m.lost_item === parseInt(id) ? m.found_item : m.lost_item}`} className="text-sm text-blue-600 hover:underline">
-                        View Matching Item →
-                      </Link>
-                    </div>
-                  </div>
-                ))}
+              {item.brand && (
+                <div className="detail-section">
+                  <h3>🏷️ Brand</h3>
+                  <p>{item.brand}</p>
+                </div>
+              )}
+
+              <div className="detail-section">
+                <h3>📂 Category</h3>
+                <span className="category-tag">{item.category}</span>
               </div>
-            )}
 
-            {/* Actions */}
-            <div className="flex gap-3">
-              <button onClick={() => navigate(-1)} className="flex-1 btn-secondary py-2">← Back</button>
+              <div className="action-buttons">
+                <QRGenerator itemId={item.id} itemTitle={item.title} />
+                <Link to="/items" className="btn-secondary">← Back to Items</Link>
+              </div>
             </div>
-          </div>
+          )}
+
+          {activeTab === 'matches' && (
+            <div className="matches-tab">
+              <h3>🎯 Potential Matches</h3>
+              {matches.length === 0 ? (
+                <div className="no-matches">
+                  <p>No matches found yet</p>
+                  <p className="hint">We'll notify you when we find potential matches</p>
+                </div>
+              ) : (
+                <div className="matches-list">
+                  {matches.map(match => (
+                    <MatchCard key={match.id} match={match} />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'chat' && (
+            <div className="chat-tab">
+              <AnonymousChat matchId={id} userId="current-user" />
+            </div>
+          )}
+
+          {activeTab === 'verify' && (
+            <div className="verify-tab">
+              <OwnershipVerification item={item} onVerify={(answers) => {
+                console.log('Verification answers:', answers);
+                alert('Verification submitted!');
+              }} />
+            </div>
+          )}
         </div>
       </div>
+
+      <style>{`
+        .item-detail-page {
+          max-width: 900px;
+          margin: 0 auto;
+          padding: 0 16px 40px;
+        }
+        .loading-container, .error-container {
+          text-align: center;
+          padding: 60px;
+        }
+        .loading-spinner {
+          width: 48px;
+          height: 48px;
+          border: 4px solid #eaeef2;
+          border-top-color: #7FFF00;
+          border-radius: 50%;
+          margin: 0 auto 16px;
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        .error-container h2 {
+          color: #1a365d;
+          margin: 0 0 16px;
+        }
+        .item-container {
+          background: white;
+          border-radius: 12px;
+          border: 1px solid #eaeef2;
+          overflow: hidden;
+        }
+        .item-header {
+          display: flex;
+          gap: 20px;
+          padding: 24px;
+          background: linear-gradient(135deg, #1a365d, #2d5a8e);
+          color: white;
+        }
+        .item-icon {
+          font-size: 48px;
+        }
+        .item-title-section {
+          flex: 1;
+        }
+        .item-title-section h1 {
+          margin: 0 0 12px;
+          font-size: 28px;
+        }
+        .item-meta {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+        .status-badge, .urgency-badge {
+          padding: 6px 12px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 600;
+        }
+        .tabs {
+          display: flex;
+          border-bottom: 1px solid #eaeef2;
+        }
+        .tab {
+          flex: 1;
+          padding: 14px;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 500;
+          color: #6b7280;
+          transition: all 0.2s ease;
+          border-bottom: 2px solid transparent;
+        }
+        .tab:hover {
+          color: #1a365d;
+          background: #f8f9fa;
+        }
+        .tab.active {
+          color: #7FFF00;
+          border-bottom-color: #7FFF00;
+        }
+        .tab-content {
+          padding: 24px;
+        }
+        .detail-section {
+          margin-bottom: 24px;
+        }
+        .detail-section h3 {
+          font-size: 14px;
+          color: #6b7280;
+          margin: 0 0 8px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .detail-section p {
+          margin: 0;
+          color: #1a365d;
+          font-size: 15px;
+        }
+        .reported-date {
+          font-size: 13px;
+          color: #9ca3af;
+          margin-top: 4px;
+        }
+        .category-tag {
+          display: inline-block;
+          padding: 6px 12px;
+          background: #f0fdf4;
+          color: #166534;
+          border-radius: 6px;
+          font-size: 13px;
+          font-weight: 600;
+        }
+        .action-buttons {
+          display: flex;
+          gap: 12px;
+          margin-top: 24px;
+          padding-top: 24px;
+          border-top: 1px solid #eaeef2;
+        }
+        .no-matches, .matches-list {
+          text-align: center;
+          padding: 40px;
+        }
+        .no-matches p {
+          margin: 0;
+          color: #6b7280;
+        }
+        .no-matches .hint {
+          font-size: 13px;
+          color: #9ca3af;
+          margin-top: 4px;
+        }
+        .matches-list {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          text-align: left;
+        }
+        @media (max-width: 600px) {
+          .item-header {
+            flex-direction: column;
+            text-align: center;
+          }
+          .tabs {
+            flex-wrap: wrap;
+          }
+          .tab {
+            flex: 1 1 50%;
+          }
+        }
+      `}</style>
     </div>
   );
 }

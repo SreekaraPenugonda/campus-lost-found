@@ -1,94 +1,144 @@
+import { Link } from 'react-router-dom';
+
 export default function Guidelines() {
   return (
     <div className="guidelines-page">
-      <div className="guidelines-header">
+      <div className="guidelines-container">
         <h1>📋 Reporting Guidelines</h1>
-        <p>Follow these guidelines to ensure accurate and helpful reports</p>
-      </div>
+        <p className="guidelines-subtitle">Follow these guidelines to help us help you</p>
 
-      <div className="guidelines-content">
-        <section className="guide-section">
-          <h2>✅ DO's</h2>
-          <ul>
-            <li><strong>Be specific:</strong> Include brand, color, model, and unique marks</li>
-            <li><strong>Add location:</strong> Building name and room number help a lot</li>
-            <li><strong>Use photos:</strong> A picture helps identify items faster</li>
-            <li><strong>Report quickly:</strong> The sooner you report, the better the chance of recovery</li>
-            <li><strong>Check regularly:</strong> Monitor your dashboard for matches and notifications</li>
-            <li><strong>Be honest:</strong> Provide accurate details for verification</li>
-          </ul>
-        </section>
+        <div className="guidelines-content">
+          <section className="guideline-section">
+            <h2>✅ Do's</h2>
+            <ul className="guideline-list">
+              <li>Provide accurate location details (building, room if known)</li>
+              <li>Upload clear photos of the item (front, back, unique marks)</li>
+              <li>Include specific details (brand, color, size, distinguishing features)</li>
+              <li>Report within 24 hours of losing/finding the item</li>
+              <li>Check the "Found" section regularly for your lost items</li>
+              <li>Respond promptly to match notifications</li>
+              <li>Use the secure chat to verify ownership before meeting</li>
+            </ul>
+          </section>
 
-        <section className="guide-section">
-          <h2>❌ DON'Ts</h2>
-          <ul>
-            <li><strong>Don't fake reports:</strong> False reports waste community time</li>
-            <li><strong>Don't share others' info:</strong> Respect privacy of other users</li>
-            <li><strong>Don't claim without proof:</strong> You must verify ownership</li>
-            <li><strong>Don't delete reports:</strong> Keep records for reference</li>
-          </ul>
-        </section>
+          <section className="guideline-section">
+            <h2>❌ Don'ts</h2>
+            <ul className="guideline-list">
+              <li>Don't post false or misleading information</li>
+              <li>Don't use the platform for non-campus items</li>
+              <li>Don't share personal contact info in public descriptions</li>
+              <li>Don't delete and repost the same item repeatedly</li>
+              <li>Don't mark items as "Found" unless you actually have them</li>
+              <li>Don't attempt to meet in isolated areas</li>
+            </ul>
+          </section>
 
-        <section className="guide-section">
-          <h2>📱 Reporting a Lost Item</h2>
-          <ol>
-            <li>Click <strong>"Report Lost"</strong> in the navigation</li>
-            <li>Select the appropriate category</li>
-            <li>Fill in title, description, and details</li>
-            <li>Add location (building, room if known)</li>
-            <li>Set urgency level (High/Medium/Low)</li>
-            <li>Submit and monitor your dashboard</li>
-          </ol>
-        </section>
+          <section className="guideline-section">
+            <h2>🔒 Safety Tips</h2>
+            <ul className="guideline-list">
+              <li>Always meet in public, well-lit areas (cafeteria, library, main building)</li>
+              <li>Bring a friend when meeting to exchange items</li>
+              <li>Verify ownership details before handing over items</li>
+              <li>Report suspicious behavior to campus security</li>
+              <li>Use the anonymous chat first - share contact info only when comfortable</li>
+            </ul>
+          </section>
 
-        <section className="guide-section">
-          <h2>✅ Reporting a Found Item</h2>
-          <ol>
-            <li>Click <strong>"Report Found"</strong> in the navigation</li>
-            <li>Select category matching the item</li>
-            <li>Describe the item accurately</li>
-            <li>Add where and when you found it</li>
-            <li>Submit - the owner will be notified if matched</li>
-          </ol>
-        </section>
+          <section className="guideline-section">
+            <h2>📝 Best Practices</h2>
+            <ul className="guideline-list">
+              <li><strong>For Lost Items:</strong> Be as specific as possible about when and where you lost it</li>
+              <li><strong>For Found Items:</strong> Describe the item without touching it (if possible)</li>
+              <li><strong>Photos:</strong> Take photos in good lighting, show all angles</li>
+              <li><strong>Description:</strong> Include unique marks, scratches, stickers, engravings</li>
+              <li><strong>Category:</strong> Choose the most specific category possible</li>
+            </ul>
+          </section>
+        </div>
 
-        <section className="guide-section">
-          <h2>🎯 Matching Process</h2>
-          <p>Our system automatically matches items based on:</p>
-          <ul>
-            <li>Category (40 points)</li>
-            <li>Building location (25 points)</li>
-            <li>Brand name (15 points)</li>
-            <li>Color (10 points)</li>
-            <li>Keyword matching (10 points)</li>
-          </ul>
-          <p>A match score above 50% triggers notifications to both parties.</p>
-        </section>
-
-        <section className="guide-section">
-          <h2>💬 Communication Etiquette</h2>
-          <ul>
-            <li>Be polite and respectful in chat</li>
-            <li>Ask for verification details to confirm ownership</li>
-            <li>Meet in public, secure locations on campus</li>
-            <li>Bring your ID when meeting</li>
-            <li>Report any suspicious behavior</li>
-          </ul>
-        </section>
+        <div className="guidelines-cta">
+          <Link to="/report-lost" className="btn-primary">Report Lost Item</Link>
+          <Link to="/report-found" className="btn-secondary">Report Found Item</Link>
+        </div>
       </div>
 
       <style>{`
-        .guidelines-page { max-width: 900px; margin: 0 auto; padding: 0 16px 40px; }
-        .guidelines-header { text-align: center; margin-bottom: 32px; }
-        .guidelines-header h1 { font-size: 28px; color: #1a365d; margin: 0 0 8px; }
-        .guidelines-header p { color: #6b7280; margin: 0; }
-        .guidelines-content { background: white; border-radius: 12px; padding: 32px; border: 1px solid #eaeef2; }
-        .guide-section { margin-bottom: 28px; }
-        .guide-section:last-child { margin-bottom: 0; }
-        .guide-section h2 { font-size: 20px; color: #1a365d; margin: 0 0 12px; }
-        .guide-section ul, .guide-section ol { color: #4b5563; line-height: 1.8; padding-left: 24px; }
-        .guide-section li { margin-bottom: 6px; }
-        .guide-section strong { color: #1a365d; }
+        .guidelines-page {
+          max-width: 1000px;
+          margin: 0 auto;
+          padding: 40px 16px;
+        }
+        .guidelines-container {
+          background: white;
+          border-radius: 12px;
+          border: 1px solid #eaeef2;
+          padding: 40px;
+        }
+        .guidelines-container h1 {
+          font-size: 32px;
+          color: #1a365d;
+          margin: 0 0 8px;
+          text-align: center;
+        }
+        .guidelines-subtitle {
+          text-align: center;
+          color: #6b7280;
+          margin: 0 0 40px;
+        }
+        .guidelines-content {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 24px;
+          margin-bottom: 40px;
+        }
+        .guideline-section {
+          padding: 24px;
+          background: #f8f9fa;
+          border-radius: 8px;
+        }
+        .guideline-section h2 {
+          font-size: 18px;
+          color: #1a365d;
+          margin: 0 0 16px;
+        }
+        .guideline-list {
+          margin: 0;
+          padding-left: 20px;
+        }
+        .guideline-list li {
+          color: #6b7280;
+          line-height: 1.6;
+          margin-bottom: 8px;
+        }
+        .guidelines-cta {
+          display: flex;
+          gap: 16px;
+          justify-content: center;
+          padding-top: 32px;
+          border-top: 1px solid #eaeef2;
+        }
+        .btn-primary, .btn-secondary {
+          padding: 14px 28px;
+          border-radius: 8px;
+          text-decoration: none;
+          font-size: 15px;
+          font-weight: 600;
+          transition: all 0.2s ease;
+        }
+        .btn-primary {
+          background: #7FFF00;
+          color: #1a365d;
+        }
+        .btn-secondary {
+          background: white;
+          color: #1a365d;
+          border: 2px solid #eaeef2;
+        }
+        @media (max-width: 768px) {
+          .guidelines-content {
+            grid-template-columns: 1fr;
+          }
+        }
       `}</style>
     </div>
   );
